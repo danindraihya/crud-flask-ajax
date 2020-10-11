@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{url_for('static', filename='css/bootstrap.min.css')}}">
+    
+    <script src="{{url_for('static', filename='jquery.min.js')}}"></script>
+    <script src="{{url_for('static', filename='propper.min.js')}}"></script>
+    <script src="{{url_for('static', filename='js/bootstrap.min.js')}}"></script>
+    <title>Document</title>
+</head>
+<body>
+    
+    <div class="row">
+        <div class="col">
+            <form action="" method="post">
+                <input id="id" type="hidden" name="id">
+                <table>
+                    <tr>
+                        <td>NRP :</td>
+                        <td><input id="nrp" type="text" name="nrp"></td>
+                    </tr>
+                    <tr>
+                        <td>Nama :</td>
+                        <td><input id="nama" type="text" name="nama"></td>
+                    </tr>
+                    <tr>
+                        <td>Jenis Kelamin :</td>
+                        <td><input type="radio" id="laki" class="jenisKelamin" name="jenisKelamin" value="laki-laki">
+                            <label for="laki">Laki laki</label><br>
+                            <input type="radio" id="perempuan" class="jenisKelamin" name="jenisKelamin" value="perempuan">
+                            <label for="perempuan">Perempuan</label></td>
+                    </tr>
+                    <tr>
+                        <td>jurusan :</td>
+                        <td><input id="jurusan" type="text" name="jurusan"></td>
+                    </tr>
+                </table>
+        
+                <button id="insertData" type="button">Submit</button>
+                <button id="resetForm" type="reset">Reset</button>
+            </form>
+        </div>
+        <div class="col">
+            <table class="table">
+                <thead>
+                  <tr>
+                    <th scope="col">NRP</th>
+                    <th scope="col">Nama</th>
+                    <th scope="col">Jenis Kelamin</th>
+                    <th scope="col">Jurusan</th>
+                    <th scope="col" colspan="2">Action</th>
+                  </tr>
+                </thead>
+                <tbody id="listMahasiswa">
+                  
+                </tbody>
+              </table>
+        </div>
+    </div>
+
+
+
+</body>
+
+<script>
+    $('#resetForm').on('click', function(){
+        $('#id').val("");
+        $('#nrp').val("");
+        $('#nama').val("");
+        $('#jurusan').val("");
+    });
+</script>
+
+<script>
+    $(document).ready(function(){
+
+        var markup = "";
+
+            $.ajax({
+                url: '/read',
+                method: 'GET',
+                data: {},
+                success: function(data) {
+                    $.each(data, function(index, value){
+                        
+                        markup += "<tr><th>"+ data[index][1] +"</th><td>"+ data[index][2] +"</td><td>"+ data[index][3] +"</td><td>"+ data[index][4] +"</td><td><button type='button' class='updateData' data-id='"+ data[index][0] +"' >Update</button></td> <td><button type='button' class='deleteData' data-id='"+ data[index][0] +"' >Delete</button></td></tr>";
+                    });
+
+                    listMahasiswa = $('#listMahasiswa');
+                    listMahasiswa.html(markup);
+                },
+                error: function(data) {
+                    console.log(data);
+                }
+            });
+
+        $(document).on('click', '#insertData', function(){
+            var markup = "";
+            let id_value = $('#id').val();
+            let nrp_value = $('#nrp').val();
+            let nama_value = $('#nama').val();
+            let jenisKelamin_value = $('input[name="jenisKelamin"]:checked').val();
+            let jurusan_value = $('#jurusan').val();
+
+            if(id_value == ""){
+                console.log('baru');
+                $.ajax({
+                    url: '/',
+                    method: 'POST',
+                    data: {
+                        nrp: nrp_value,
+                        nama: nama_value,
+                        jenisKelamin: jenisKelamin_value,
+                        jurusan: jurusan_value 
+                    },
+                    success: function(data){
+                        $.each(data, function(index, value){
+                            
+                            markup += "<tr><th>"+ data[index][1] +"</th><td>"+ data[index][2] +"</td><td>"+ data[index][3] +"</td><td>"+ data[index][4] +"</td><td><button class='updateData' type='button' data-id='"+ data[index][0] +"' >Update</button></td> <td><button class='deleteData' type='button' data-id='"+ data[index][0] +"' >Delete</button></td></tr>";
+                        });
+
+                        listMahasiswa = $('#listMahasiswa');
+                        listMahasiswa.html(markup);
+
+                        $('#nrp').val("");
+                        $('#nama').val("");
+                        $('#jurusan').val("");
+                    },
+                });
+            } else {
+                console.log('update');
+                $.ajax({
+                    url: '/update/'+ id_value,
+                    method: 'POST',
+                    data: {
+                        id: id_value,
+                        nrp: nrp_value,
+                        nama: nama_value,
+                        jenisKelamin: jenisKelamin_value,
+                        jurusan: jurusan_value
+                    },
+                    success: function(data){
+                        $.each(data, function(index, value){
+                            
+                            markup += "<tr><th>"+ data[index][1] +"</th><td>"+ data[index][2] +"</td><td>"+ data[index][3] +"</td><td>"+ data[index][4] +"</td><td><button class='updateData' type='button' data-id='"+ data[index][0] +"' >Update</button></td> <td><button class='deleteData' type='button' data-id='"+ data[index][0] +"' >Delete</button></td></tr>";
+                        });
+
+                        listMahasiswa = $('#listMahasiswa');
+                        listMahasiswa.html(markup);
+
+                        $('#id').val("");
+                        $('#nrp').val("");
+                        $('#nama').val("");
+                        $('#jurusan').val("");
+                    }
+                });
+            }
+        });  
+
+        $(document).on('click', '.updateData', function(){
+            let id_value = $(this).data('id');
+            $.ajax({
+                url: '/detail/'+ id_value,
+                method: 'GET',
+                data: {
+                    id: id_value                   
+                },
+                success: function(data){
+                    $('#id').val(data[0]);
+                    $('#nrp').val(data[1]);
+                    $('#nama').val(data[2]);
+                    if(data[3] == 'perempuan'){
+                        $("#perempuan").prop("checked", true);
+                    } else {
+                        $("#laki").prop("checked", true);
+                    }        
+                    $('#jurusan').val(data[4]);
+                }
+            });
+        });
+
+        $(document).on('click', '.deleteData', function(){
+            var markup = "";
+            let id_value = $(this).data('id');
+            $.ajax({
+                url: '/delete/'+ id_value,
+                method: 'POST',
+                data: {},
+                success: function(data){
+                    $.each(data, function(index, value){
+                            markup += "<tr><th>"+ data[index][1] +"</th><td>"+ data[index][2] +"</td><td>"+ data[index][3] +"</td><td>"+ data[index][4] +"</td><td><button class='updateData' type='button' data-id='"+ data[index][0] +"' >Update</button></td> <td><button class='deleteData' type='button' data-id='"+ data[index][0] +"' >Delete</button></td></tr>";
+                    });
+
+                    listMahasiswa = $('#listMahasiswa');
+                    listMahasiswa.html(markup);
+                }
+            });
+
+        });
+
+        
+    });
+</script>
+
+</html>
